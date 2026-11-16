@@ -1,0 +1,35 @@
+name: Hourly VPN Subscription Update
+
+on:
+  schedule:
+    # Запуск каждый час в 00 минут
+    - cron: '0 * * * *'
+  # Возможность запустить вручную в любой момент
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-proxies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Скачиваем текущий репозиторий
+        uses: actions/checkout@v4
+
+      - name: Устанавливаем Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Запускаем 6-ступенчатый парсер и аудитор
+        run: python proxy_parser.py
+
+      - name: Сохраняем обновленную подписку
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add sub.txt sub_b64.txt
+          git commit -m "Автообновление подписки (ежечасный аудит)" || exit 0
+          git push
